@@ -45,25 +45,54 @@ namespace MachineLearningHw2
 			return prediction;
 		}
 
-		private class PearsonCache
+		public class WeightAndContribution
 		{
-			public double SumOfWeights { get; private set; }
-			public double Accumulated { get; private set; }
-
-			public PearsonCache(double weight, double accumulated)
+			public WeightAndContribution(double weight, double contribution)
 			{
-				SumOfWeights = weight;
-				Accumulated = accumulated;
+				Weight = weight;
+				Contribution = contribution;
 			}
 
-			public void Update(double weight, double accumulated)
+			public double Weight { get; private set; }
+			public double Contribution { get; private set; }
+		}
+
+		private class PearsonCache
+		{
+			public List<WeightAndContribution> WeightAndContributions { get; private set; }
+
+			public PearsonCache(double weight, double contribution)
 			{
-				SumOfWeights += weight;
-				Accumulated += accumulated;
+				WeightAndContributions = new List<WeightAndContribution>()
+				{
+					new WeightAndContribution(weight, contribution)
+				};
+			}
+
+			public void Update(double weight, double contribution)
+			{
+				WeightAndContributions.Add(new WeightAndContribution(weight, contribution));
+			}
+
+			public double GetTop(int k)
+			{
+				var selected = WeightAndContributions.OrderByDescending(n => n.Weight).Take(k);
+
+				double sumOfWeights = 0;
+				double accumulatedContributions = 0;
+				foreach (var weightAndContribution in selected)
+				{
+					sumOfWeights += weightAndContribution.Weight;
+					accumulatedContributions += weightAndContribution.Contribution;
+				}
+
+				double result = (1/sumOfWeights)*(accumulatedContributions);
+
+				return result;
 			}
 		}
 
-		public IReadOnlyDictionary<int, MoviePrediction> PredictAllScores(int userId, IReadOnlyDictionary<int, float> moviesWithRealScore)
+		public IReadOnlyDictionary<int, MoviePrediction> PredictAllScores(int userId, IReadOnlyDictionary<int, float> moviesWithRealScore, int k)
 		{
 			var userCache = _pearsonCalculator.GetUserCache();
 
@@ -118,9 +147,9 @@ namespace MachineLearningHw2
 				double prediction = averageRatingForUser;
 
 				// Some users get 0 weight sum, which means... we can't do a better job at estimating than its pure average rating
-				if (pearsonCache.Value.SumOfWeights != 0)
+				if (pearsonCache.Value.WeightAndContributions.Count >= 0)
 				{
-					prediction += (1/pearsonCache.Value.SumOfWeights)*(pearsonCache.Value.Accumulated);
+					prediction += pearsonCache.Value.GetTop(k);
 				}
 				else
 				{

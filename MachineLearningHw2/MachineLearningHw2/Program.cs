@@ -11,6 +11,8 @@ namespace MachineLearningHw2
 {
 	public class Program
 	{
+		private const int K = 10;
+
 		private static string MovieTitlesPath => Path.Combine(Directory.GetCurrentDirectory() + @"\..\..\..\..\netflix_data\movie_titles.txt");
 		private static string UserRatingsTrainingPath => Path.Combine(Directory.GetCurrentDirectory() + @"\..\..\..\..\netflix_data\trainingRatings.txt");
 		private static string UserRatingsTestPath => Path.Combine(Directory.GetCurrentDirectory() + @"\..\..\..\..\netflix_data\testingRatings.txt");
@@ -74,7 +76,7 @@ namespace MachineLearningHw2
 			List<MoviePrediction> predictions = listOfUsersToPredictScoresOn.AsParallel().Select(l =>
 			{
 				// Make the prediction for this users movies
-				var returnValue = predictor.PredictAllScores(l.Key, l.Value.GetMovieRatings());
+				var returnValue = predictor.PredictAllScores(l.Key, l.Value.GetMovieRatings(), K);
 
 				// This is simply to update the console on the current progress
 				l.Value.Predicted = true;
@@ -109,7 +111,7 @@ namespace MachineLearningHw2
 
 			// To make recommendations, we will predict all movies for this user. Once we do that prediction, we will obtain the
 			// movies with the top score, and display them here
-			IReadOnlyDictionary<int, MoviePrediction> movieScores = predictor.PredictAllScores(999999, null);
+			IReadOnlyDictionary<int, MoviePrediction> movieScores = predictor.PredictAllScores(999999, null, K);
 			var bestPredictionsFiltered = movieScores.Where(n => !trainingSetCache.GetUserMovieRatings(999999).ContainsKey(n.Key));
 			var bestPredictions = bestPredictionsFiltered.Select(n => new
 			{
@@ -157,7 +159,7 @@ namespace MachineLearningHw2
 			UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
 
 			var allScores = predictor.PredictAllScores(testingUserRatings[0].UserId,
-				testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId));
+				testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId), K);
 
 			var allErrors = new List<double>();
 			foreach (var keyValuePair in allScores)
