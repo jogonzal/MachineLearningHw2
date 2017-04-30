@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MachineLearningHw2
@@ -102,7 +103,23 @@ namespace MachineLearningHw2
 			var resultDict = new Dictionary<int, MoviePrediction>();
 			foreach (var pearsonCache in dict)
 			{
-				double prediction = averageRatingForUser + (1 / pearsonCache.Value.SumOfWeights) * (pearsonCache.Value.Accumulated);
+				double prediction = averageRatingForUser;
+
+				// Some users get 0 weight sum, which means... we can't do a better job at estimating than its pure average rating
+				if (pearsonCache.Value.SumOfWeights != 0)
+				{
+					prediction += (1/pearsonCache.Value.SumOfWeights)*(pearsonCache.Value.Accumulated);
+				}
+				else
+				{
+					Console.WriteLine("Could not make an accurate prediction for user {0} in movie {1}", userId, pearsonCache.Key);
+				}
+
+				if (double.IsNaN(prediction))
+				{
+					throw new InvalidOperationException();
+				}
+
 				resultDict.Add(pearsonCache.Key, new MoviePrediction()
 				{
 					Prediction = prediction,
