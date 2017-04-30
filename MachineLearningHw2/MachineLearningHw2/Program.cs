@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using MachineLearningHw2.ErrorCalculation;
 using MachineLearningHw2.Netflix;
 using MachineLearningHw2.Parsing;
 
@@ -40,27 +42,59 @@ namespace MachineLearningHw2
 				return;
 			}
 
+			Console.WriteLine("Parsing the input files...");
 			List<Movie> movieTitles = CsvParserUtils.ParseCsvAsList<Movie>(MovieTitlesPath);
-			List<UserRating> testingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTestPath);
-
 			UserCache trainingSetCache = UserCache.BuildUserCache(UserRatingsTrainingPath);
+			UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
+
+			Console.WriteLine("Initializing predictors...");
 			PearsonCoefficientCalculator pearsonCalculator = new PearsonCoefficientCalculator(trainingSetCache);
 			MovieScorePredictor predictor = new MovieScorePredictor(pearsonCalculator);
 
-			double prediction = predictor.PredictScore(testingUserRatings[0].UserId, testingUserRatings[0].MovieId);
+			// List<UserRating> testingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTestPath);
+			//double prediction = predictor.PredictScore(testingUserRatings[0].UserId, testingUserRatings[0].MovieId);
 
-			UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
+			//UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
 
-			var allScores = predictor.PredictAllScores(testingUserRatings[0].UserId,
-				testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId).Keys.ToList());
+			//var allScores = predictor.PredictAllScores(testingUserRatings[0].UserId,
+			//	testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId).Keys.ToList());
 
-			var allErrors = new List<double>();
-			foreach (var keyValuePair in allScores)
+			//var allErrors = new List<double>();
+			//foreach (var keyValuePair in allScores)
+			//{
+			//	var realScore = testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId)[keyValuePair.Key];
+			//	double error = Math.Abs(keyValuePair.Value - realScore);
+			//	allErrors.Add(error);
+			//}
+
+			// Get the list of users to make predictions on
+			IReadOnlyDictionary<int, UserCache.UserRatingsCache> listOfUsersToPredictScoresOn = testingSetCache.GetAllUsersAndMovieRatings();
+
+			Console.WriteLine("Making predictions...");
+			// Predict ratings for all the users in parallel
+			List<MoviePrediction> predictions = listOfUsersToPredictScoresOn.AsParallel().Select(l =>
 			{
-				var realScore = testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId)[keyValuePair.Key];
-				double error = Math.Abs(keyValuePair.Value - realScore);
-				allErrors.Add(error);
-			}
+				// Make the prediction for this users movies
+				var returnValue = predictor.PredictAllScores(l.Key, l.Value.GetMovieRatings());
+
+				// This is simply to update the console on the current progress
+				l.Value.Predicted = true;
+				int predicted = listOfUsersToPredictScoresOn.Values.Count(n => n.Predicted);
+				Console.Write("\r{0}/{1}", predicted, listOfUsersToPredictScoresOn.Count);
+
+				// Return the prediction
+				return returnValue;
+			}).SelectMany(s => s.Values).ToList();
+
+			Console.WriteLine(Environment.NewLine);
+
+			Console.WriteLine("Calculating errors...");
+			var rootMeanSquareError = RootMeanSquareError.Calculate(predictions);
+			var meanAbsoluteError = MeanAbsoluteError.Calculate(predictions);
+
+			Console.WriteLine("=========================================");
+			Console.WriteLine("Root mean square error: {0}", rootMeanSquareError);
+			Console.WriteLine("Mean absolute error: {0}", meanAbsoluteError);
 
 			Console.WriteLine("Press any key to quit...");
 			Console.ReadKey();

@@ -3,6 +3,12 @@ using System.Linq;
 
 namespace MachineLearningHw2
 {
+	public class MoviePrediction
+	{
+		public double RealRating { get; set; }
+		public double Prediction { get; set; }
+	}
+
 	public class MovieScorePredictor
 	{
 		private readonly PearsonCoefficientCalculator _pearsonCalculator;
@@ -17,7 +23,7 @@ namespace MachineLearningHw2
 			var userCache = _pearsonCalculator.GetUserCache();
 
 			// Find all users that rated the movie
-			var usersThatRatedMovie =
+			IEnumerable<KeyValuePair<int, UserCache.UserRatingsCache>> usersThatRatedMovie =
 				userCache.GetAllUsersAndMovieRatings().Where(k => k.Value.GetMovieRatings().ContainsKey(movieId));
 
 			double sumOfWeights = 0;
@@ -43,9 +49,9 @@ namespace MachineLearningHw2
 			public double SumOfWeights { get; private set; }
 			public double Accumulated { get; private set; }
 
-			public PearsonCache(double sumOfWeights, double accumulated)
+			public PearsonCache(double weight, double accumulated)
 			{
-				SumOfWeights = sumOfWeights;
+				SumOfWeights = weight;
 				Accumulated = accumulated;
 			}
 
@@ -56,32 +62,32 @@ namespace MachineLearningHw2
 			}
 		}
 
-		public IReadOnlyDictionary<int, double> PredictAllScores(int userId, IReadOnlyList<int> movieIds)
+		public IReadOnlyDictionary<int, MoviePrediction> PredictAllScores(int userId, IReadOnlyDictionary<int, float> movies)
 		{
 			var userCache = _pearsonCalculator.GetUserCache();
 
 			// Find all users that rated the movie
 			var usersThatRatedCommonMovies = userCache.GetAllUsersAndMovieRatings();
 
-			var dict = new Dictionary<int, PearsonCache>(movieIds.Count);
+			Dictionary<int, PearsonCache> dict = new Dictionary<int, PearsonCache>(movies.Count);
 			foreach (var userThatRatedMovie in usersThatRatedCommonMovies)
 			{
 				double weight = _pearsonCalculator.Calculate(userId, userThatRatedMovie.Key);
 
-				foreach (var movieId in movieIds)
+				foreach (var movieId in movies)
 				{
 					float movieRating;
-					if (!userThatRatedMovie.Value.GetMovieRatings().TryGetValue(movieId, out movieRating))
+					if (!userThatRatedMovie.Value.GetMovieRatings().TryGetValue(movieId.Key, out movieRating))
 					{
 						continue;
 					}
 
-					double localResult = weight * (userThatRatedMovie.Value.GetMovieRatings()[movieId] - userThatRatedMovie.Value.GetAverageRating());
+					double localResult = weight * (movieRating - userThatRatedMovie.Value.GetAverageRating());
 
 					PearsonCache pearsonCache;
-					if (!dict.TryGetValue(movieId, out pearsonCache))
+					if (!dict.TryGetValue(movieId.Key, out pearsonCache))
 					{
-						dict.Add(movieId, new PearsonCache(weight, localResult));
+						dict.Add(movieId.Key, new PearsonCache(weight, localResult));
 					}
 					else
 					{
@@ -92,12 +98,16 @@ namespace MachineLearningHw2
 
 			float averageRatingForUser = userCache.CalculateMeanRatingForUser(userId);
 
-			// Calculate predictions
-			var resultDict = new Dictionary<int, double>();
+			// Calculate predictions and error
+			var resultDict = new Dictionary<int, MoviePrediction>();
 			foreach (var pearsonCache in dict)
 			{
 				double prediction = averageRatingForUser + (1 / pearsonCache.Value.SumOfWeights) * (pearsonCache.Value.Accumulated);
-				resultDict.Add(pearsonCache.Key, prediction);
+				resultDict.Add(pearsonCache.Key, new MoviePrediction()
+				{
+					Prediction = prediction,
+					RealRating = movies[pearsonCache.Key]
+				});
 			}
 
 			return resultDict;

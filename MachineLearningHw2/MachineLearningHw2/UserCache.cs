@@ -24,6 +24,8 @@ namespace MachineLearningHw2
 				AddRating(rating, movieId);
 			}
 
+			public bool Predicted { get; set; }
+
 			public void AddRating(float rating, int movieId)
 			{
 				_ratingCount++;
