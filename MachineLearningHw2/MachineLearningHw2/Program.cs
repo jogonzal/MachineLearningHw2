@@ -40,12 +40,12 @@ namespace MachineLearningHw2
 			}
 
 			List<Movie> movieTitles = CsvParserUtils.ParseCsvAsList<Movie>(MovieTitlesPath);
-			List<UserRating> trainingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTrainingPath);
 			List<UserRating> testingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTestPath);
 
-			MeanVoteCalculator meanVoteCalculator = new MeanVoteCalculator(trainingUserRatings);
+			UserCache trainingSetCache = UserCache.BuildUserCache(UserRatingsTrainingPath);
+			PearsonCoefficientCalculator pearsonCalculator = new PearsonCoefficientCalculator(trainingSetCache);
 
-			float rating = meanVoteCalculator.CalculateMeanRatingForUser(trainingUserRatings[0].UserId);
+
 
 			Console.WriteLine("Press any key to quit...");
 			Console.ReadKey();
