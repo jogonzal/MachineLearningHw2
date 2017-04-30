@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MeanVoteCalculator.cs" />
     <Compile Include="Netflix\Movie.cs" />
     <Compile Include="Netflix\UserRating.cs" />
     <Compile Include="Parsing\CsvParserUtils.cs" />

@@ -43,6 +43,10 @@ namespace MachineLearningHw2
 			List<UserRating> trainingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTrainingPath);
 			List<UserRating> testingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTestPath);
 
+			MeanVoteCalculator meanVoteCalculator = new MeanVoteCalculator(trainingUserRatings);
+
+			float rating = meanVoteCalculator.CalculateMeanRatingForUser(trainingUserRatings[0].UserId);
+
 			Console.WriteLine("Press any key to quit...");
 			Console.ReadKey();
 		}
