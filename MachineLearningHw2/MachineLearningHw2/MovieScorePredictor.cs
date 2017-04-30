@@ -112,7 +112,7 @@ namespace MachineLearningHw2
 				}
 				else
 				{
-					Console.WriteLine("Could not find references in training data for predicting user {0} in movie {1}", userId, pearsonCache.Key);
+					Console.WriteLine("Warning: Could not find references in training data for predicting user {0} in movie {1}", userId, pearsonCache.Key);
 				}
 
 				if (double.IsNaN(prediction))
