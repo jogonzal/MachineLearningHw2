@@ -51,6 +51,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErrorCalculation\MeanAbsoluteError.cs" />
+    <Compile Include="ErrorCalculation\RootMeanSquareError.cs" />
     <Compile Include="MovieScorePredictor.cs" />
     <Compile Include="PearsonCoefficientCalculator.cs" />
     <Compile Include="UserCache.cs" />
