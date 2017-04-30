@@ -115,6 +115,11 @@ namespace MachineLearningHw2
 			Dictionary<int, PearsonCache> dict = new Dictionary<int, PearsonCache>(moviesWithoutScore.Count);
 			foreach (var userThatRatedMovie in usersThatRatedCommonMovies)
 			{
+				if (userThatRatedMovie.Key == userId)
+				{
+					continue;
+				}
+
 				double weight = _pearsonCalculator.Calculate(userId, userThatRatedMovie.Key);
 
 				foreach (var movieId in moviesWithoutScore)
