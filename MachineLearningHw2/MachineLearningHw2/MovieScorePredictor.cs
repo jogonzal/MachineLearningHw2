@@ -63,15 +63,16 @@ namespace MachineLearningHw2
 
 			public PearsonCache(double weight, double contribution)
 			{
-				WeightAndContributions = new List<WeightAndContribution>()
-				{
-					new WeightAndContribution(weight, contribution)
-				};
+				WeightAndContributions = new List<WeightAndContribution>();
+				Update(weight, contribution);
 			}
 
 			public void Update(double weight, double contribution)
 			{
-				WeightAndContributions.Add(new WeightAndContribution(weight, contribution));
+				if (weight != 0 && contribution != 0)
+				{
+					WeightAndContributions.Add(new WeightAndContribution(weight, contribution));
+				}
 			}
 
 			public double GetTop(int k)
@@ -147,7 +148,7 @@ namespace MachineLearningHw2
 				double prediction = averageRatingForUser;
 
 				// Some users get 0 weight sum, which means... we can't do a better job at estimating than its pure average rating
-				if (pearsonCache.Value.WeightAndContributions.Count >= 0)
+				if (pearsonCache.Value.WeightAndContributions.Count > 0)
 				{
 					prediction += pearsonCache.Value.GetTop(k);
 				}
