@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MovieScorePredictor.cs" />
     <Compile Include="PearsonCoefficientCalculator.cs" />
     <Compile Include="UserCache.cs" />
     <Compile Include="Netflix\Movie.cs" />

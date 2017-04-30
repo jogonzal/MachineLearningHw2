@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using MachineLearningHw2.Netflix;
 using MachineLearningHw2.Parsing;
 
@@ -8,7 +9,7 @@ namespace MachineLearningHw2
 	{
 		private readonly Dictionary<int, UserRatingsCache> _userRatingsCache;
 
-		private class UserRatingsCache
+		public class UserRatingsCache
 		{
 			private int _ratingCount;
 			private float _ratingsAccumulated;
@@ -73,6 +74,11 @@ namespace MachineLearningHw2
 		{
 			List<UserRating> trainingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(path);
 			return new UserCache(trainingUserRatings);
+		}
+
+		public IReadOnlyDictionary<int, UserRatingsCache> GetAllUsersAndMovieRatings()
+		{
+			return _userRatingsCache;
 		}
 	}
 }

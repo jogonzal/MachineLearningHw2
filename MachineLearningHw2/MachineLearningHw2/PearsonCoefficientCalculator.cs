@@ -12,6 +12,11 @@ namespace MachineLearningHw2
 			_userCache = userCache;
 		}
 
+		public UserCache GetUserCache()
+		{
+			return _userCache;
+		}
+
 		public double Calculate(int userId1, int userId2)
 		{
 			// Find the two users ratings and average ratings
@@ -19,6 +24,8 @@ namespace MachineLearningHw2
 			IReadOnlyDictionary<int, float> userId1Ratings = _userCache.GetUserMovieRatings(userId1);
 			float userId2AverageRating = _userCache.CalculateMeanRatingForUser(userId2);
 			IReadOnlyDictionary<int, float> userId2Ratings = _userCache.GetUserMovieRatings(userId2);
+
+			int moviesInCommon = 0;
 
 			// For every movie the two users have in common, calculate numerator and denominator
 			double numerator = 0;
@@ -40,9 +47,23 @@ namespace MachineLearningHw2
 
 				numerator += localNumerator;
 				denominator += localDenominator;
+
+				moviesInCommon++;
+			}
+
+			if (denominator == 0)
+			{
+				// 0 can happen if one user always rates the same. In that case, there is no weight to give, as
+				// there is no differentiation
+				return 0;
 			}
 
 			double result = numerator / Math.Sqrt(denominator);
+
+			if (double.IsInfinity(result) || double.IsNaN(result))
+			{
+				throw new InvalidOperationException();
+			}
 
 			return result;
 		}
