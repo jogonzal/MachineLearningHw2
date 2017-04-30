@@ -8,6 +8,7 @@ namespace MachineLearningHw2
 	public class UserCache
 	{
 		private readonly Dictionary<int, UserRatingsCache> _userRatingsCache;
+		public HashSet<int> MovieIds { get; private set; }
 
 		public class UserRatingsCache
 		{
@@ -46,10 +47,14 @@ namespace MachineLearningHw2
 
 		public UserCache(List<UserRating> userRatings)
 		{
+			MovieIds = new HashSet<int>();
+
 			// Do all the mean vote calculations right now
 			_userRatingsCache = new Dictionary<int, UserRatingsCache>(); // Store accumulated vote counts and ratings
 			foreach (UserRating userRating in userRatings)
 			{
+				MovieIds.Add(userRating.MovieId);
+
 				UserRatingsCache ratingsCache;
 				if (_userRatingsCache.TryGetValue(userRating.UserId, out ratingsCache))
 				{
