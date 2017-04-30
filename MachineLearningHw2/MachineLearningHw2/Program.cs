@@ -43,29 +43,13 @@ namespace MachineLearningHw2
 			}
 
 			Console.WriteLine("Parsing the input files...");
-			List<Movie> movieTitles = CsvParserUtils.ParseCsvAsList<Movie>(MovieTitlesPath);
+			//List<Movie> movieTitles = CsvParserUtils.ParseCsvAsList<Movie>(MovieTitlesPath);
 			UserCache trainingSetCache = UserCache.BuildUserCache(UserRatingsTrainingPath);
 			UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
 
 			Console.WriteLine("Initializing predictors...");
 			PearsonCoefficientCalculator pearsonCalculator = new PearsonCoefficientCalculator(trainingSetCache);
 			MovieScorePredictor predictor = new MovieScorePredictor(pearsonCalculator);
-
-			// List<UserRating> testingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTestPath);
-			//double prediction = predictor.PredictScore(testingUserRatings[0].UserId, testingUserRatings[0].MovieId);
-
-			//UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
-
-			//var allScores = predictor.PredictAllScores(testingUserRatings[0].UserId,
-			//	testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId).Keys.ToList());
-
-			//var allErrors = new List<double>();
-			//foreach (var keyValuePair in allScores)
-			//{
-			//	var realScore = testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId)[keyValuePair.Key];
-			//	double error = Math.Abs(keyValuePair.Value - realScore);
-			//	allErrors.Add(error);
-			//}
 
 			// Get the list of users to make predictions on
 			IReadOnlyDictionary<int, UserCache.UserRatingsCache> listOfUsersToPredictScoresOn = testingSetCache.GetAllUsersAndMovieRatings();
@@ -98,6 +82,26 @@ namespace MachineLearningHw2
 
 			Console.WriteLine("Press any key to quit...");
 			Console.ReadKey();
+		}
+
+		// NOTE: Only used for testing
+		private void RunLocalTests(MovieScorePredictor predictor)
+		{
+			List<UserRating> testingUserRatings = CsvParserUtils.ParseCsvAsList<UserRating>(UserRatingsTestPath);
+			double prediction = predictor.PredictScore(testingUserRatings[0].UserId, testingUserRatings[0].MovieId);
+
+			UserCache testingSetCache = UserCache.BuildUserCache(UserRatingsTestPath);
+
+			var allScores = predictor.PredictAllScores(testingUserRatings[0].UserId,
+				testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId));
+
+			var allErrors = new List<double>();
+			foreach (var keyValuePair in allScores)
+			{
+				var realScore = testingSetCache.GetUserMovieRatings(testingUserRatings[0].UserId)[keyValuePair.Key];
+				double error = Math.Abs(keyValuePair.Value.Prediction - realScore);
+				allErrors.Add(error);
+			}
 		}
 	}
 }
